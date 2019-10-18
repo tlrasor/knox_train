@@ -1,5 +1,3 @@
-require "knox_train/shell"
-
 module KnoxTrain
 
   RSYNC_PATH = which?("rsync") || raise("Unable to find rsync on on system $PATH")
@@ -9,13 +7,13 @@ module KnoxTrain
   module Rsync
 
     # equivalent to rsync -azp --delete --append --partial
-    def sync src:, dest:, **opts
+    def rsync! src:, dest:, **opts
       batch = Batch.new(opts)
       batch.add src, dest
       batch.sync!
     end
 
-    def batch opts={}
+    def rsync opts={}
       Batch.new(opts)
     end
 
@@ -46,17 +44,20 @@ module KnoxTrain
           raise "Unable to add src: #{source}, dest: #{dest}"
         end
         @reqs << {src: source, dest: dest, opts: opts}
+        self
       end
 
       def add_all sources, dest, opts={}
         source ||= []
         sources.each {|s| add s, dest, opts }
+        self
       end
 
       def << pair
         if pair[:src] && pair[:dest]
           @reqs << pair
         end
+        self
       end
 
       def sync!

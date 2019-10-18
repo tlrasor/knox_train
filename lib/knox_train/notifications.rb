@@ -16,13 +16,13 @@ module KnoxTrain
       #
       ## The available options are `:appIcon`, `:title`, `:group`, `:activate`, `:open`,
       ## `:execute`, `:sender`, and `:sound`. For a description of each option see:
-      def notify message, opts={}
+      def notify! message, opts={}
         opts = DEFAULT_OPTS.merge opts
         TerminalNotifier.notify(message, opts)
       end
     else
       puts "Warning: Notifications are only supported on macos. Notifications will be no-ops."
-      def notify message, opts={}
+      def notify! message, opts={}
       end
     end
   end
