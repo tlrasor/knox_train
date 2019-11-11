@@ -1,3 +1,5 @@
+require 'tty-logger'
+
 module KnoxTrain
 
   class Driver
@@ -5,25 +7,28 @@ module KnoxTrain
     include KnoxTrain::Notifications
     include KnoxTrain::ConnectionTest
     include KnoxTrain::Rsync
-    include KnoxTrain::Timer
     
     DEFAULT_OPTS = {
       logging: true,
       notifications: true,
     }
 
+    attr_accessor :log
+
     def initialize opts={}
       @opts = DEFAULT_OPTS.merge opts
+      @log = TTY::Logger.new
     end
 
     def drive &block
       begin
-        start_timer!
-        log "Starting the noble train of data"
+        timer = Timer.new
+        log.info "Starting the noble train of data"
         notify "Starting the noble train of data"
         self.instance_eval(&block)
-        log "Arrived successfully in #{stop_timer!}"
-        notify "Arrived successfully in #{stop_timer!}"
+        elapsed = timer.elapsed
+        log.success "Arrived successfully in #{elapsed}"
+        notify "Arrived successfully in #{elapsed}"
       rescue
         notify "Encountered error processing train: #{$!}"
         abort! "Encountered error processing train: #{$!}"
@@ -43,18 +48,6 @@ module KnoxTrain
     end
 
     private
-
-    def log message
-      if @opts[:logging]
-        puts format_log_message(message)
-      end
-    end
-
-    def log_error message
-      if @opts[:logging]
-        STDERR.puts format_log_message(message)
-      end
-    end
 
     def notify message, opts = {}
       if @opts[:notifications]

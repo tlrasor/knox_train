@@ -18,6 +18,12 @@ module KnoxTrain
     def format_log_message msg
       "#{Time.now}: #{msg}"
     end
+
+    def count_files dirs = []
+      dirs.inject(0) { |a, dir|
+        a + Dir[File.join(dir, '**', '*')].count { |file| File.file?(file) }
+      }
+    end
   end
 
   extend KnoxTrain::Utils

@@ -43,5 +43,8 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "os", "~> 1.0"
   spec.add_runtime_dependency "terminal-notifier", "~> 2.0"
   spec.add_runtime_dependency "tty-progressbar", "~> 0.17.0"
+  spec.add_runtime_dependency "tty-logger", "~> 0.2.0"
+  spec.add_runtime_dependency "tty-which", "~> 0.4.1"
+
 
 end
