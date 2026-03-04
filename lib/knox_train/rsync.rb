@@ -1,7 +1,7 @@
 require "tty-which"
 module KnoxTrain
 
-  RSYNC_PATH = TTY::Which.which("rsync") || raise("Unable to find rsync on on system $PATH")
+  RSYNC_PATH = TTY::Which.which("rsync")
   NICE_PATH = TTY::Which.which("nice")
   IONICE_PATH = TTY::Which.which("ionice")
 
