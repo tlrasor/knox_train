@@ -6,8 +6,6 @@ module KnoxTrain
     include KnoxTrain::Utils
     include KnoxTrain::Notifications
     include KnoxTrain::ConnectionTest
-    include KnoxTrain::Rsync
-    
     DEFAULT_OPTS = {
       logging: true,
       notifications: true,

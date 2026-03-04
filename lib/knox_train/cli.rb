@@ -1,5 +1,10 @@
 require "thor"
 require "knox_train/version"
+require "knox_train/config_loader"
+require "knox_train/dsl"
+require "knox_train/profile"
+require "knox_train/schema"
+require "knox_train/ssh_server"
 
 module KnoxTrain
   class CLI < Thor
@@ -45,12 +50,66 @@ module KnoxTrain
 
     desc "validate", "Validate config file (no I/O, no restic)"
     def validate
-      raise NotImplementedError, "validate is implemented in Phase 2"
+      path = options[:config] || KnoxTrain::ConfigLoader.find
+      unless path
+        say "No config file found. Use -c PATH to specify.", :red
+        exit 1
+      end
+      KnoxTrain::ConfigLoader.load(path)
+      reg = KnoxTrain.registry
+      say "Config: #{path}"
+      say "Profiles: #{reg.profiles.keys.join(', ')}"
+      say "Groups:   #{reg.groups.keys.join(', ')}" unless reg.groups.empty?
+      say "✓ Config valid", :green
+    rescue KnoxTrain::DSL::UnknownKeyError, KnoxTrain::DSL::ValidationError,
+           KnoxTrain::ConfigLoader::Error => e
+      say "✗ #{e.message}", :red
+      exit 1
     end
 
     desc "show PROFILE", "Dump resolved config for a profile"
-    def show(_profile)
-      raise NotImplementedError, "show is implemented in Phase 2"
+    def show(profile_name)
+      path = options[:config] || KnoxTrain::ConfigLoader.find
+      unless path
+        say "No config file found. Use -c PATH to specify.", :red
+        exit 1
+      end
+      KnoxTrain::ConfigLoader.load(path)
+      profile = KnoxTrain.registry.profiles[profile_name.to_sym]
+      unless profile
+        say "Profile '#{profile_name}' not found.", :red
+        exit 1
+      end
+      print_profile(profile)
+    rescue KnoxTrain::DSL::UnknownKeyError, KnoxTrain::DSL::ValidationError,
+           KnoxTrain::ConfigLoader::Error => e
+      say "✗ #{e.message}", :red
+      exit 1
+    end
+
+    private
+
+    def print_profile(profile)
+      puts "Profile: #{profile.name}"
+      puts "  sources:"
+      profile.sources.each { |s| puts "    - #{s.is_a?(Proc) ? '[block]' : s}" }
+      puts "  exclude_files: #{profile.exclude_files&.join(', ').then { |v| v&.empty? ? '(none)' : v } || '(none)'}"
+      puts "  tags: #{profile.tags&.join(', ') || '(none)'}"
+      puts "  host: #{profile.host}"
+      puts "  backends:"
+      profile.backends.each do |b|
+        puts "    #{b.type}:"
+        puts "      repo:     #{b.repo}"
+        puts "      password: #{b.password ? '[block]' : '(not set)'}"
+        if b.retention
+          kv = b.retention.map { |k, v| "#{k}=#{v}" }.join(" ")
+          puts "      retention: #{kv}"
+        end
+        hooks = []
+        hooks << "run_before: [#{b.run_befores.length} block(s)]" if b.run_befores&.any?
+        hooks << "run_after: [#{b.run_afters.length} block(s)]"   if b.run_afters&.any?
+        puts "      hooks: #{hooks.join(', ')}" unless hooks.empty?
+      end
     end
   end
 end
