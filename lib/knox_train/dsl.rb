@@ -1,3 +1,4 @@
+require "knox_train/connection_test"
 require "knox_train/profile"
 require "knox_train/ssh_server"
 require "knox_train/secrets/keychain"
@@ -9,6 +10,7 @@ module KnoxTrain
     # ── Exceptions ─────────────────────────────────────────────────────────
     class UnknownKeyError < StandardError; end
     class ValidationError < StandardError; end
+    class SkipProfile < StandardError; end
 
     # ── GlobalConfig ────────────────────────────────────────────────────────
     GlobalConfig = Struct.new(:priority, :notifications, keyword_init: true)
@@ -141,6 +143,14 @@ module KnoxTrain
         dsl = BackendDSL.new(type)
         dsl.instance_eval(&block)
         @backends << dsl.build
+      end
+
+      # Called inside a source block to abort the profile run for this invocation.
+      #   source { skip! "Photos volume not mounted" unless File.directory?(path); path }
+      # Works because source blocks are created inside `profile do...end` which is
+      # instance_eval'd on ProfileDSL, so `self` inside the block is the ProfileDSL instance.
+      def skip!(reason = "")
+        raise SkipProfile, reason
       end
 
       def method_missing(name, *_args, &_block)

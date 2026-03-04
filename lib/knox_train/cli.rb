@@ -5,6 +5,7 @@ require "knox_train/dsl"
 require "knox_train/profile"
 require "knox_train/schema"
 require "knox_train/ssh_server"
+require "knox_train/restic/runner"
 
 module KnoxTrain
   class CLI < Thor
@@ -24,7 +25,50 @@ module KnoxTrain
     option :all,                    type: :boolean, desc: "Run all profiles"
     option :prune,                  type: :boolean, desc: "Apply retention policy after backup"
     def backup
-      raise NotImplementedError, "backup is implemented in Phase 4"
+      path = options[:config] || KnoxTrain::ConfigLoader.find
+      unless path
+        say "No config file found. Use -c PATH to specify.", :red
+        exit 1
+      end
+      KnoxTrain::ConfigLoader.load(path)
+      reg = KnoxTrain.registry
+
+      profiles = if options[:all]
+                   reg.profiles.values
+                 elsif options[:profile]
+                   p = reg.profiles[options[:profile].to_sym]
+                   unless p
+                     say "Profile '#{options[:profile]}' not found.", :red
+                     exit 1
+                   end
+                   [p]
+                 else
+                   say "Specify --profile NAME or --all", :red
+                   exit 1
+                 end
+
+      backend_filter = options[:backend]&.to_sym
+      prune          = options[:prune] || false
+      had_error      = false
+
+      profiles.each do |profile|
+        backends = profile.backends
+        backends = backends.select { |b| b.type == backend_filter } if backend_filter
+        backends.each do |backend|
+          KnoxTrain::Restic::Runner.new(profile, backend, prune: prune).run
+        rescue KnoxTrain::DSL::SkipProfile => e
+          say "Skipping #{profile.name}: #{e.message}", :yellow
+        rescue TTY::Command::ExitError => e
+          say "✗ #{profile.name}/#{backend.type}: #{e.message}", :red
+          had_error = true
+        end
+      end
+
+      exit 1 if had_error
+    rescue KnoxTrain::DSL::UnknownKeyError, KnoxTrain::DSL::ValidationError,
+           KnoxTrain::ConfigLoader::Error => e
+      say "✗ #{e.message}", :red
+      exit 1
     end
 
     desc "status", "Show snapshot status"

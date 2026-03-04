@@ -18,6 +18,7 @@ require "knox_train/secrets/env"
 require "knox_train/dsl"
 require "knox_train/schema"
 require "knox_train/config_loader"
+require "knox_train/restic/runner"
 
 
 module KnoxTrain
