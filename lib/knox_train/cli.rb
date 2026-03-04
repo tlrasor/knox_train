@@ -113,17 +113,50 @@ module KnoxTrain
     end
 
     desc "schedule", "Install launchd backup schedule"
-    option :profile, aliases: "-p", type: :string,  desc: "Profile name"
-    option :all,                    type: :boolean, desc: "Schedule all profiles"
+    option :all,  type: :boolean, desc: "Schedule all profiles"
+    option :time, aliases: "-t", type: :string, desc: "Daily backup time (HH:MM, e.g. 02:00)"
     def schedule
-      raise NotImplementedError, "schedule is implemented in Phase 6"
+      unless options[:all]
+        say "Specify --all (per-profile scheduling not yet supported)", :red
+        exit 1
+      end
+      unless options[:time] =~ /\A([01]?\d|2[0-3]):\d{2}\z/
+        say "Specify --time HH:MM, hour 0-23 (e.g. --time 02:00)", :red
+        exit 1
+      end
+      path = options[:config] || KnoxTrain::ConfigLoader.find
+      unless path
+        say "No config file found. Use -c PATH to specify.", :red
+        exit 1
+      end
+      hour, minute = options[:time].split(":").map(&:to_i)
+      agent = KnoxTrain::Scheduler::Launchd.new(
+        config_path: File.expand_path(path),
+        hour:        hour,
+        minute:      minute
+      )
+      agent.install
+      say "✓ Scheduled: #{agent.plist_path}", :green
+      say "  Runs daily at #{options[:time]} — label: #{KnoxTrain::Scheduler::Launchd::LABEL}"
+    rescue KnoxTrain::ConfigLoader::Error => e
+      say "✗ #{e.message}", :red
+      exit 1
     end
 
     desc "unschedule", "Remove launchd backup schedule"
-    option :profile, aliases: "-p", type: :string,  desc: "Profile name"
-    option :all,                    type: :boolean, desc: "Unschedule all profiles"
+    option :all, type: :boolean, desc: "Unschedule all profiles"
     def unschedule
-      raise NotImplementedError, "unschedule is implemented in Phase 6"
+      unless options[:all]
+        say "Specify --all (per-profile scheduling not yet supported)", :red
+        exit 1
+      end
+      agent = KnoxTrain::Scheduler::Launchd.new
+      if File.exist?(agent.plist_path)
+        agent.uninstall
+        say "✓ Unscheduled: #{agent.plist_path}", :green
+      else
+        say "Not scheduled (#{agent.plist_path} not found)", :yellow
+      end
     end
 
     desc "validate", "Validate config file (no I/O, no restic)"

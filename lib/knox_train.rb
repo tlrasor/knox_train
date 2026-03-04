@@ -20,6 +20,7 @@ require "knox_train/schema"
 require "knox_train/config_loader"
 require "knox_train/restic/runner"
 require "knox_train/restic/status"
+require "knox_train/scheduler/launchd"
 
 
 module KnoxTrain
