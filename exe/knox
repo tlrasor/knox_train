@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+require "knox_train/cli"
+KnoxTrain::CLI.start(ARGV)

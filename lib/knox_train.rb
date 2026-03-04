@@ -8,6 +8,7 @@ require "knox_train/timer"
 require "knox_train/connection_test"
 require "knox_train/rsync"
 
+require "knox_train/commands"
 require "knox_train/driver"
 
 

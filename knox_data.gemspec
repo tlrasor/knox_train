@@ -30,4 +30,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "tty-logger",        "~> 0.6"
   spec.add_runtime_dependency "tty-progressbar",   "~> 0.18"
   spec.add_runtime_dependency "tty-which",         "~> 0.5"
+  spec.add_runtime_dependency "thor",              "~> 1.3"
+  spec.add_runtime_dependency "dry-schema",        "~> 1.13"
+  spec.add_runtime_dependency "tty-table",         "~> 0.12"
 end
