@@ -3,5 +3,10 @@ module KnoxTrain
                        keyword_init: true)
 
   Backend = Struct.new(:type, :repo, :password, :retention, :run_befores, :run_afters,
-                       keyword_init: true)
+                       :env_credentials, keyword_init: true) do
+    def initialize(**kwargs)
+      kwargs[:env_credentials] ||= {}
+      super(**kwargs)
+    end
+  end
 end

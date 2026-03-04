@@ -1,4 +1,5 @@
 require "test_helper"
+require "minitest/mock"
 
 class DslTest < Minitest::Test
 
@@ -145,6 +146,47 @@ class DslTest < Minitest::Test
         profile(:p) { source "/tmp"; backend(:b2) { repo "b2:x:y"; typo_key "val" } }
       end
     end
+  end
+
+  def test_backend_keychain_method_calls_secrets_keychain_fetch
+    fake_status = Struct.new(:success?).new(true)
+    fake_result = ["mypassword\n", "", fake_status]
+
+    KnoxTrain::Secrets::Keychain.stub(:available?, true) do
+      Open3.stub(:capture3, fake_result) do
+        ctx = make_ctx do
+          profile(:p) do
+            source "/tmp"
+            backend(:b2) do
+              repo "b2:x:y"
+              password { keychain("restic-docs") }
+            end
+          end
+        end
+        b = ctx.profiles[:p].backends.first
+        assert_kind_of Proc, b.password
+        assert_equal "mypassword", b.password.call
+      end
+    end
+  end
+
+  def test_backend_env_credential_stores_named_procs
+    ctx = make_ctx do
+      profile(:p) do
+        source "/tmp"
+        backend(:b2) do
+          repo "b2:x:y"
+          password { "" }
+          env_credential("AWS_ACCESS_KEY_ID")     { "key-id" }
+          env_credential("AWS_SECRET_ACCESS_KEY") { "secret" }
+        end
+      end
+    end
+    creds = ctx.profiles[:p].backends.first.env_credentials
+    assert_equal 2, creds.length
+    assert_kind_of Proc, creds["AWS_ACCESS_KEY_ID"]
+    assert_equal "key-id", creds["AWS_ACCESS_KEY_ID"].call
+    assert_equal "secret", creds["AWS_SECRET_ACCESS_KEY"].call
   end
 
   # ── GlobalDSL ─────────────────────────────────────────────────────────────

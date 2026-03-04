@@ -13,6 +13,8 @@ require "knox_train/driver"
 
 require "knox_train/ssh_server"
 require "knox_train/profile"
+require "knox_train/secrets/keychain"
+require "knox_train/secrets/env"
 require "knox_train/dsl"
 require "knox_train/schema"
 require "knox_train/config_loader"

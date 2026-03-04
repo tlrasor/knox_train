@@ -1,5 +1,7 @@
 require "knox_train/profile"
 require "knox_train/ssh_server"
+require "knox_train/secrets/keychain"
+require "knox_train/secrets/env"
 
 module KnoxTrain
   module DSL
@@ -41,12 +43,13 @@ module KnoxTrain
       VALID_RETENTION_KEYS = %i[daily weekly monthly yearly].freeze
 
       def initialize(type)
-        @type        = type.to_sym
-        @repo        = nil
-        @password    = nil
-        @retention   = nil
-        @run_befores = []
-        @run_afters  = []
+        @type            = type.to_sym
+        @repo            = nil
+        @password        = nil
+        @retention       = nil
+        @run_befores     = []
+        @run_afters      = []
+        @env_credentials = {}
       end
 
       def repo(string)     = @repo     = string
@@ -68,6 +71,27 @@ module KnoxTrain
       def run_before(&block) = @run_befores << block
       def run_after(&block)  = @run_afters  << block
 
+      # Available inside password { } and env_credential { } blocks because those
+      # blocks capture BackendDSL as self (they execute inside instance_eval context).
+      # Calls Secrets::Keychain.fetch at execution time, not at declaration.
+      def keychain(service)
+        Secrets::Keychain.fetch(service)
+      end
+
+      # Non-macOS fallback: reads a secret from an environment variable.
+      def env_secret(var_name)
+        Secrets::Env.fetch(var_name)
+      end
+
+      # Registers a named credential proc. Phase 4 iterates env_credentials and
+      # calls each proc to set ENV[var_name] before spawning restic.
+      #
+      #   env_credential("AWS_ACCESS_KEY_ID") { keychain("b2-key-id") }
+      #
+      def env_credential(var_name, &block)
+        @env_credentials[var_name] = block
+      end
+
       def method_missing(name, *_args, &_block)
         loc = caller_locations(1, 1).first
         raise UnknownKeyError,
@@ -78,12 +102,13 @@ module KnoxTrain
 
       def build
         Backend.new(
-          type:        @type,
-          repo:        @repo,
-          password:    @password,
-          retention:   @retention,
-          run_befores: @run_befores,
-          run_afters:  @run_afters
+          type:            @type,
+          repo:            @repo,
+          password:        @password,
+          retention:       @retention,
+          run_befores:     @run_befores,
+          run_afters:      @run_afters,
+          env_credentials: @env_credentials
         )
       end
     end
