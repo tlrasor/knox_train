@@ -3,26 +3,40 @@ require 'os'
 module KnoxTrain
   module Notifications
 
+    # Asset path for the Henry Knox image
+    ASSET_IMAGE = File.expand_path("../assets/henry-knox.jpg", __FILE__)
+
+    # Default notification options
+    # Uses contentImage to display the image in the notification body
     DEFAULT_OPTS = {
       title: "The noble train of data",
-      appIcon: "https://i.imgur.com/b3rhnzJ.png",
+      contentImage: ASSET_IMAGE,
       group: "KnoxTrain"
     }
 
     if OS.mac?
       require "terminal-notifier"
-      
-      # Makes a notification, see terminal-notifier doc:
+
+      # Send a notification with pretty formatting
       #
-      ## The available options are `:appIcon`, `:title`, `:group`, `:activate`, `:open`,
-      ## `:execute`, `:sender`, and `:sound`. For a description of each option see:
-      def notify! message, opts={}
+      # Usage:
+      #   notify!("Backup complete", activate: true)
+      #   notify!("Status check finished")
+      #
+      # Options:
+      #   :activate  - bring notification to front (default: false for success)
+      #   :title     - override default title
+      #   :appIcon   - override image path
+      #   :group     - notification group (default: "KnoxTrain")
+      #   :sound     - play sound (default: none)
+      #
+      def notify! message, opts = {}
         opts = DEFAULT_OPTS.merge opts
         TerminalNotifier.notify(message, opts)
       end
     else
-      puts "Warning: Notifications are only supported on macos. Notifications will be no-ops."
-      def notify! message, opts={}
+      # Non-macOS: no-op (silently skip)
+      def notify! message, opts = {}
       end
     end
   end

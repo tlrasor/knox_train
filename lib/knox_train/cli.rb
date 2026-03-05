@@ -71,12 +71,12 @@ module KnoxTrain
 
       if had_error
         notify_if_enabled(
-          "⚠️  Backup incomplete: some backends failed. Check logs.",
+          "⚠️  Backup incomplete\nSome backends failed. Check logs for details.",
           { activate: true }
         )
       else
         notify_if_enabled(
-          "✓ Backup complete: all backends succeeded",
+          "✓ Backup complete\nAll backends backed up successfully",
           {}
         )
       end
@@ -120,7 +120,7 @@ module KnoxTrain
       end
 
       notify_if_enabled(
-        "✓ Status check complete: #{rows.length} backends checked",
+        "✓ Status check complete\n#{rows.length} backends checked and verified",
         {}
       ) unless verbose
 
@@ -158,13 +158,13 @@ module KnoxTrain
       say "✓ Scheduled: #{agent.plist_path}", :green
       say "  Runs daily at #{options[:time]} — label: #{KnoxTrain::Scheduler::Launchd::LABEL}"
       notify_if_enabled(
-        "✓ Scheduled daily backup at #{options[:time]}",
+        "✓ Backup scheduled\nDaily at #{options[:time]} via launchd",
         {}
       )
     rescue KnoxTrain::ConfigLoader::Error => e
       say "✗ #{e.message}", :red
       notify_if_enabled(
-        "❌ Scheduling failed",
+        "❌ Scheduling failed\nConfig error: #{e.message}",
         { activate: true }
       )
       exit 1
@@ -182,7 +182,7 @@ module KnoxTrain
         agent.uninstall
         say "✓ Unscheduled: #{agent.plist_path}", :green
         notify_if_enabled(
-          "✓ Backup schedule removed",
+          "✓ Schedule removed\nBackup automation disabled",
           {}
         )
       else
