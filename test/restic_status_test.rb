@@ -167,4 +167,45 @@ class ResticStatusTest < Minitest::Test
   ensure
     original.nil? ? ENV.delete("RESTIC_PASSWORD") : ENV["RESTIC_PASSWORD"] = original
   end
+
+  # ── Hook invocation ──────────────────────────────────────────────────────
+
+  def test_fetch_calls_run_before_hooks
+    called = []
+    backend = make_backend(run_befores: [-> { called << :before }])
+    cmds = fake_commands_sequence(SNAPSHOTS_JSON, STATS_JSON, RAW_JSON)
+    KnoxTrain::Restic::Status.new(make_profile, backend, commands: cmds).fetch
+    assert_includes called, :before
+  end
+
+  def test_fetch_calls_run_after_hooks
+    called = []
+    backend = make_backend(run_afters: [-> { called << :after }])
+    cmds = fake_commands_sequence(SNAPSHOTS_JSON, STATS_JSON, RAW_JSON)
+    KnoxTrain::Restic::Status.new(make_profile, backend, commands: cmds).fetch
+    assert_includes called, :after
+  end
+
+  def test_fetch_calls_run_after_hooks_on_error
+    called = []
+    backend = make_backend(run_afters: [-> { called << :after }])
+    obj = Object.new
+    result_stub = Struct.new(:exit_status, :out, :err).new(1, "", "restic failed")
+    obj.define_singleton_method(:exec) { |_cmd, **_| raise TTY::Command::ExitError.new("restic", result_stub) }
+    assert_raises(TTY::Command::ExitError) do
+      KnoxTrain::Restic::Status.new(make_profile, backend, commands: obj).fetch
+    end
+    assert_includes called, :after
+  end
+
+  def test_fetch_verbose_calls_run_before_and_after_hooks
+    called = []
+    backend = make_backend(
+      run_befores: [-> { called << :before }],
+      run_afters:  [-> { called << :after  }]
+    )
+    cmds = fake_commands_sequence("snap output", "stats output", "raw output")
+    KnoxTrain::Restic::Status.new(make_profile, backend, commands: cmds).fetch_verbose
+    assert_equal [:before, :after], called
+  end
 end

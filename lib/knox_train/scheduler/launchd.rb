@@ -5,7 +5,7 @@ require "tty-which"
 module KnoxTrain
   module Scheduler
     class Launchd
-      LABEL  = "local.kt.all.backup"
+      LABEL  = "local.knox"
       BINARY = TTY::Which.which("knox") || "/opt/homebrew/bin/knox"
       private_constant :BINARY
 

@@ -23,33 +23,45 @@ module KnoxTrain
 
       # Fetches JSON data from restic. Returns SnapshotData.
       # Raises TTY::Command::ExitError if restic exits non-zero.
+      # run_before/run_after hooks are invoked (e.g. NAS wake/shutdown for SFTP backends).
       def fetch
-        with_env(build_env) do
-          snapshots = parse_json(@commands.exec(snapshots_cmd).out, [])
-          stats     = parse_json(@commands.exec(stats_cmd).out, {})
-          raw       = parse_json(@commands.exec(raw_stats_cmd).out, {})
+        run_hooks(@backend.run_befores)
+        begin
+          with_env(build_env) do
+            snapshots = parse_json(@commands.exec(snapshots_cmd).out, [])
+            stats     = parse_json(@commands.exec(stats_cmd).out, {})
+            raw       = parse_json(@commands.exec(raw_stats_cmd).out, {})
 
-          SnapshotData.new(
-            profile_name:   @profile.name,
-            backend_type:   @backend.type,
-            snapshot_count: snapshots.length,
-            latest_time:    snapshots.any? ? snapshots.map { |s| s["time"] }.max : nil,
-            file_count:     stats["total_file_count"] || 0,
-            restore_bytes:  stats["total_size"] || 0,
-            stored_bytes:   raw["total_size"] || 0
-          )
+            SnapshotData.new(
+              profile_name:   @profile.name,
+              backend_type:   @backend.type,
+              snapshot_count: snapshots.length,
+              latest_time:    snapshots.any? ? snapshots.map { |s| s["time"] }.max : nil,
+              file_count:     stats["total_file_count"] || 0,
+              restore_bytes:  stats["total_size"] || 0,
+              stored_bytes:   raw["total_size"] || 0
+            )
+          end
+        ensure
+          run_hooks(@backend.run_afters)
         end
       end
 
       # Returns raw output strings for --verbose mode (no --json flag).
       # Raises TTY::Command::ExitError if restic exits non-zero.
+      # run_before/run_after hooks are invoked (e.g. NAS wake/shutdown for SFTP backends).
       def fetch_verbose
-        with_env(build_env) do
-          {
-            snapshots: @commands.exec(snapshots_cmd(json: false)).out,
-            stats:     @commands.exec(stats_cmd(json: false)).out,
-            raw:       @commands.exec(raw_stats_cmd(json: false)).out
-          }
+        run_hooks(@backend.run_befores)
+        begin
+          with_env(build_env) do
+            {
+              snapshots: @commands.exec(snapshots_cmd(json: false)).out,
+              stats:     @commands.exec(stats_cmd(json: false)).out,
+              raw:       @commands.exec(raw_stats_cmd(json: false)).out
+            }
+          end
+        ensure
+          run_hooks(@backend.run_afters)
         end
       end
 
@@ -89,6 +101,10 @@ module KnoxTrain
         args += @profile.tags.flat_map { |t| ["--tag", t] } if @profile.tags&.any?
         args << "--json" if json
         Shellwords.shelljoin(args)
+      end
+
+      def run_hooks(hooks)
+        hooks.each(&:call)
       end
 
       def parse_json(str, default)
