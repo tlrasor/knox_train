@@ -7,11 +7,13 @@ require "knox_train/schema"
 require "knox_train/ssh_server"
 require "knox_train/restic/runner"
 require "knox_train/restic/status"
+require "knox_train/notifications"
 require "time"
 require "tty-table"
 
 module KnoxTrain
   class CLI < Thor
+    include KnoxTrain::Notifications
     def self.exit_on_failure? = true
 
     class_option :config, aliases: "-c", type: :string,
@@ -67,6 +69,18 @@ module KnoxTrain
         end
       end
 
+      if had_error
+        notify_if_enabled(
+          "⚠️  Backup incomplete: some backends failed. Check logs.",
+          { activate: true }
+        )
+      else
+        notify_if_enabled(
+          "✓ Backup complete: all backends succeeded",
+          {}
+        )
+      end
+
       exit 1 if had_error
     rescue KnoxTrain::DSL::UnknownKeyError, KnoxTrain::DSL::ValidationError,
            KnoxTrain::ConfigLoader::Error => e
@@ -105,6 +119,11 @@ module KnoxTrain
         end
       end
 
+      notify_if_enabled(
+        "✓ Status check complete: #{rows.length} backends checked",
+        {}
+      ) unless verbose
+
       print_status_table(rows) unless verbose
     rescue KnoxTrain::DSL::UnknownKeyError, KnoxTrain::DSL::ValidationError,
            KnoxTrain::ConfigLoader::Error => e
@@ -138,8 +157,16 @@ module KnoxTrain
       agent.install
       say "✓ Scheduled: #{agent.plist_path}", :green
       say "  Runs daily at #{options[:time]} — label: #{KnoxTrain::Scheduler::Launchd::LABEL}"
+      notify_if_enabled(
+        "✓ Scheduled daily backup at #{options[:time]}",
+        {}
+      )
     rescue KnoxTrain::ConfigLoader::Error => e
       say "✗ #{e.message}", :red
+      notify_if_enabled(
+        "❌ Scheduling failed",
+        { activate: true }
+      )
       exit 1
     end
 
@@ -154,6 +181,10 @@ module KnoxTrain
       if File.exist?(agent.plist_path)
         agent.uninstall
         say "✓ Unscheduled: #{agent.plist_path}", :green
+        notify_if_enabled(
+          "✓ Backup schedule removed",
+          {}
+        )
       else
         say "Not scheduled (#{agent.plist_path} not found)", :yellow
       end
@@ -199,6 +230,12 @@ module KnoxTrain
     end
 
     private
+
+    def notify_if_enabled(message, opts = {})
+      global_cfg = KnoxTrain.registry.global
+      return unless global_cfg.nil? || global_cfg.notifications
+      notify!(message, opts)
+    end
 
     def print_status_table(rows)
       return say("No status data.", :yellow) if rows.empty?
