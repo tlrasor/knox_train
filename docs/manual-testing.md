@@ -4,11 +4,20 @@ This guide provides step-by-step recipes for manually testing KnoxTrain function
 
 ## Prerequisites
 
+Install system-wide via Homebrew:
 ```bash
-# Ensure you can run knox from source
-ruby -I lib exe/knox version
+rake brew:install
+```
 
-# Expected output: knox 0.8.0 (or current version)
+For local development testing (no install required):
+```bash
+ruby -I lib exe/knox version
+```
+
+To pick up code changes after editing:
+```bash
+rake brew:reinstall    # same version, redeploys immediately
+rake release:patch     # bump version + redeploy
 ```
 
 ---

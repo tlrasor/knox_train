@@ -19,25 +19,27 @@ KnoxTrain is a Ruby CLI tool for managing backups across multiple restic backend
 
 ## Installation
 
-### Development (local Homebrew tap)
+### System-wide (Homebrew)
 
 ```bash
 brew tap truevillain/knox file:///Users/travis/Projects/Personal/knox_train2/tap
-brew install knox
+brew install truevillain/knox/knox_train
 ```
 
-For development, use:
+### Updating
 
 ```bash
-ruby -I lib exe/knox <command>
+rake brew:reinstall      # redeploy current code at same version
+rake release:patch       # bump patch version, commit, and redeploy
+rake release:minor       # bump minor version, commit, and redeploy
+rake release:set[2.1.0]  # set explicit version, commit, and redeploy
 ```
 
-### From source
+### Uninstalling
 
 ```bash
-git clone https://github.com/truevillain/knox_train.git
-cd knox_train
-bundle install
+rake brew:uninstall
+# Optional: rm -rf ~/Library/Logs/knox
 ```
 
 ## Usage
@@ -198,19 +200,24 @@ bundle exec rake test
 
 ### Development Workflow
 
-For feature development, edit files and test with:
+Run commands against local source without installing:
 
 ```bash
-ruby -I lib exe/knox <command> -c ./path/to/config.rb
+ruby -I lib exe/knox <command>
 ```
+
+**Important**: Never use `gem install knox_train` for development. It puts an rbenv shim
+on the PATH that will conflict with the Homebrew-installed binary. Always use either:
+- `ruby -I lib exe/knox` for development testing
+- `rake brew:install` / `rake brew:reinstall` for system-wide installation
 
 ### Releasing
 
-1. Update version in `lib/knox_train/version.rb`
-2. Commit and push changes
-3. Tag release: `git tag vX.Y.Z`
-4. Push tags: `git push --tags`
-5. Rebuild tap: `brew tap-new truevillain/knox && brew tap-push truevillain/knox`
+```bash
+rake release:patch       # bump patch version, commit, and redeploy
+rake release:minor       # bump minor version, commit, and redeploy
+rake release:set[2.1.0]  # set explicit version, commit, and redeploy
+```
 
 ## Architecture
 
