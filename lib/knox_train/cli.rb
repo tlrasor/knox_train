@@ -170,6 +170,28 @@ module KnoxTrain
       exit 1
     end
 
+    desc "logs", "Show backup logs"
+    option :follow, aliases: "-f", type: :boolean, desc: "Follow log output (tail -f)"
+    option :lines, aliases: "-n", type: :numeric, desc: "Show last N lines (default: 50)"
+    def logs
+      log_file = File.expand_path("~/Library/Logs/knox/backup.log")
+
+      unless File.exist?(log_file)
+        say "No logs found at #{log_file}", :yellow
+        say "Run 'knox backup --all' or 'knox schedule' to generate logs", :yellow
+        exit 0
+      end
+
+      if options[:follow]
+        # Follow log (tail -f)
+        system("tail", "-f", log_file)
+      else
+        # Show last N lines (default 50)
+        lines = options[:lines] || 50
+        system("tail", "-n", lines.to_s, log_file)
+      end
+    end
+
     desc "unschedule", "Remove launchd backup schedule"
     option :all, type: :boolean, desc: "Unschedule all profiles"
     def unschedule

@@ -101,6 +101,15 @@ knox status -c ./knox_train.rb
 # Show detailed status for specific backend
 knox status -b s3 -v -c ./knox_train.rb
 
+# Show backup logs
+knox logs
+
+# Follow logs in real-time (like tail -f)
+knox logs --follow
+
+# Show last 100 lines of logs
+knox logs --lines 100
+
 # Schedule daily backup at 02:00 (macOS launchd)
 knox schedule --all --time 02:00 -c ./knox_train.rb
 
