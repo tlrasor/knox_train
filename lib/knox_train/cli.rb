@@ -254,7 +254,7 @@ module KnoxTrain
     private
 
     def notify_if_enabled(message, opts = {})
-      global_cfg = KnoxTrain.registry.global
+      global_cfg = KnoxTrain.registry&.global
       return unless global_cfg.nil? || global_cfg.notifications
       notify!(message, opts)
     end
