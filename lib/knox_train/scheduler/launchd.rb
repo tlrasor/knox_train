@@ -31,6 +31,8 @@ module KnoxTrain
           <dict>
             <key>KNOX_CONFIG</key>
             <string><%= @config_path %></string>
+            <key>PATH</key>
+            <string><%= @path %></string>
           </dict>
           <key>StartCalendarInterval</key>
           <dict>
@@ -52,6 +54,7 @@ module KnoxTrain
         @config_path = config_path
         @hour        = hour
         @minute      = minute
+        @path        = ENV["PATH"] || "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
       end
 
       def install
