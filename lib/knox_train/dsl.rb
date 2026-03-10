@@ -212,6 +212,10 @@ module KnoxTrain
         KnoxTrain::SshServer.new(**opts)
       end
 
+      def volume(**opts)
+        KnoxTrain::Volume.new(**opts)
+      end
+
       def group(name, profile_names)
         @groups[name.to_sym] = profile_names.map(&:to_sym)
       end

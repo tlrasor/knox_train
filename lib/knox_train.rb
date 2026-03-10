@@ -12,6 +12,7 @@ require "knox_train/commands"
 require "knox_train/driver"
 
 require "knox_train/ssh_server"
+require "knox_train/volume"
 require "knox_train/profile"
 require "knox_train/secrets/keychain"
 require "knox_train/secrets/env"
