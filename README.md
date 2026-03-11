@@ -220,41 +220,6 @@ rake release:minor       # bump minor version, commit, and redeploy
 rake release:set[2.1.0]  # set explicit version, commit, and redeploy
 ```
 
-## Architecture
-
-### Core Phases
-
-- **Phase 1**: Gem scaffolding and versioning
-- **Phase 2**: DSL configuration + profile/backend structs
-- **Phase 3**: Secrets (Keychain + ENV) infrastructure
-- **Phase 4**: Restic runner with SSH/NAS orchestration
-- **Phase 5**: Status reporting (snapshots + dedup stats)
-- **Phase 6**: Scheduled backups via launchd
-- **Phase 7**: Config validation and migration
-- **Phase 8**: Native notifications (macOS)
-
-### File Structure
-
-```
-lib/
-  knox_train/
-    cli.rb                 # Thor CLI commands
-    dsl.rb                 # Configuration DSL
-    profile.rb             # Profile/Backend structs
-    config_loader.rb       # Config file loading
-    notifications.rb       # macOS notification integration
-    ssh_server.rb          # SSH + Wake-on-LAN
-    restic/
-      runner.rb            # Restic command execution
-      status.rb            # Snapshot status reporting
-    scheduler/
-      launchd.rb           # macOS launchd integration
-    secrets/
-      keychain.rb          # macOS Keychain integration
-      env.rb               # Environment variable fallback
-test/
-  *_test.rb                # Unit tests
-```
 
 ## Contributing
 

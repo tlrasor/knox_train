@@ -11,4 +11,5 @@ tap/
 .DS_Store
 .claude/
 restic
+CLAUDE.md
 *.nogit.*
