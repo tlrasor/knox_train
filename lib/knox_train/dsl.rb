@@ -177,12 +177,14 @@ module KnoxTrain
     # ── ConfigContext ──────────────────────────────────────────────────────
     # Top-level instance_eval target for KnoxTrain.configure blocks.
     class ConfigContext
-      attr_reader :profiles, :groups
+      attr_reader :profiles, :groups, :before_all_hooks, :after_all_hooks
 
       def initialize
-        @profiles = {}
-        @groups   = {}
-        @global   = nil
+        @profiles         = {}
+        @groups           = {}
+        @global           = nil
+        @before_all_hooks = []
+        @after_all_hooks  = []
       end
 
       def profile(name, &)
@@ -208,6 +210,11 @@ module KnoxTrain
       # Creates a data-only SshServer object. Operational methods (wake/shutdown)
       # are added in Phase 4. The returned object is typically assigned to a local
       # variable in the configure block and closed over by run_before/run_after blocks.
+      # Session-level hooks: run once before/after the entire backup run.
+      # Guaranteed: after_all runs even if profiles raise errors (ensure block in CLI).
+      def before_all(&block) = @before_all_hooks << block
+      def after_all(&block)  = @after_all_hooks  << block
+
       def ssh_server(**)
         KnoxTrain::SshServer.new(**)
       end

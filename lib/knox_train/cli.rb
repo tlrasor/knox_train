@@ -59,17 +59,22 @@ module KnoxTrain
       prune          = options[:prune] || false
       had_error      = false
 
-      profiles.each do |profile|
-        backends = profile.backends
-        backends = backends.select { |b| b.type == backend_filter } if backend_filter
-        backends.each do |backend|
-          KnoxTrain::Restic::Runner.new(profile, backend, prune: prune).run
-        rescue KnoxTrain::DSL::SkipProfile => e
-          say "Skipping #{profile.name}: #{e.message}", :yellow
-        rescue TTY::Command::ExitError => e
-          say "✗ #{profile.name}/#{backend.type}: #{e.message}", :red
-          had_error = true
+      reg.before_all_hooks.each(&:call)
+      begin
+        profiles.each do |profile|
+          backends = profile.backends
+          backends = backends.select { |b| b.type == backend_filter } if backend_filter
+          backends.each do |backend|
+            KnoxTrain::Restic::Runner.new(profile, backend, prune: prune).run
+          rescue KnoxTrain::DSL::SkipProfile => e
+            say "Skipping #{profile.name}: #{e.message}", :yellow
+          rescue TTY::Command::ExitError => e
+            say "✗ #{profile.name}/#{backend.type}: #{e.message}", :red
+            had_error = true
+          end
         end
+      ensure
+        reg.after_all_hooks.each(&:call)
       end
 
       if had_error
