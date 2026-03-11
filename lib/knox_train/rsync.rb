@@ -1,63 +1,59 @@
-require "tty-which"
-module KnoxTrain
+# frozen_string_literal: true
 
-  RSYNC_PATH = TTY::Which.which("rsync")
-  NICE_PATH = TTY::Which.which("nice")
-  IONICE_PATH = TTY::Which.which("ionice")
+require 'tty-which'
+module KnoxTrain
+  RSYNC_PATH = TTY::Which.which('rsync')
+  NICE_PATH = TTY::Which.which('nice')
+  IONICE_PATH = TTY::Which.which('ionice')
 
   module Rsync
-
     # equivalent to rsync -azp --delete --append --partial
-    def rsync! src:, dest:, **opts
+    def rsync!(src:, dest:, **opts)
       batch = Batch.new(opts)
       batch.add src, dest
       batch.sync!
     end
 
-    def rsync opts={}
+    def rsync(opts = {})
       Batch.new(opts)
     end
 
     class Batch
       DEFAULT_OPTS = {
-          archive: true,
-          compress: true,
-          quiet: true,
-          partial: true,
-          append: true
-      }
+        archive: true,
+        compress: true,
+        quiet: true,
+        partial: true,
+        append: true
+      }.freeze
 
-      def initialize opts = {}
+      def initialize(opts = {})
         @opts = DEFAULT_OPTS.merge! opts
         @reqs = []
       end
 
-      def opt key, value=true
+      def opt(key, value = true)
         @opts[key] = value
       end
 
-      def opts options={}
+      def opts(options = {})
         @opts.merge! options
       end
 
-      def add source, dest, opts={}
-        unless source && dest
-          raise "Unable to add src: #{source}, dest: #{dest}"
-        end
-        @reqs << {src: source, dest: dest, opts: opts}
+      def add(source, dest, opts = {})
+        raise "Unable to add src: #{source}, dest: #{dest}" unless source && dest
+
+        @reqs << { src: source, dest: dest, opts: opts }
         self
       end
 
-      def add_all sources, dest, opts={}
-        source ||= []
-        sources.each {|s| add s, dest, opts }
+      def add_all(sources, dest, opts = {})
+        sources.each { |s| add s, dest, opts }
         self
       end
 
-      def << pair
-        if pair[:src] && pair[:dest]
-          @reqs << pair
-        end
+      def <<(pair)
+        @reqs << pair if pair[:src] && pair[:dest]
         self
       end
 
@@ -65,58 +61,39 @@ module KnoxTrain
         @reqs.each do |r|
           cmd = r[:opts] ? make_cmd(r[:opts]) : make_cmd
           cmd = "#{cmd} #{r[:src]} #{r[:dest]}"
-          unless system(cmd) 
-            raise("command '#{cmd}' exited with error!")
-          end
-          if block_given?
-            yield(r[:src], r[:dest])
-          end
+          raise("command '#{cmd}' exited with error!") unless system(cmd)
+
+          yield(r[:src], r[:dest]) if block_given?
         end
       end
 
       private
 
-      def make_cmd overrides={}
+      def make_cmd(overrides = {})
         rsync_opts = @opts.merge overrides
         cmd = []
         if rsync_opts[:nice]
-          if NICE_PATH.nil?
-            raise(":nice specified but nice cannot be found on path")
-          end
+          raise(':nice specified but nice cannot be found on path') if NICE_PATH.nil?
+
           cmd << "#{NICE_PATH} -n 19"
         end
         if rsync_opts[:ionice]
-          if IONICE_PATH.nil?
-            raise(":ionice specified but ionice cannot be found on path")
-          end
+          raise(':ionice specified but ionice cannot be found on path') if IONICE_PATH.nil?
+
           cmd << "#{IONICE_PATH} -c2 -n7"
         end
         cmd << RSYNC_PATH
-        if rsync_opts[:archive]
-          cmd << "-a"
-        end
-        if rsync_opts[:compress]
-          cmd << "-z"
-        end
+        cmd << '-a' if rsync_opts[:archive]
+        cmd << '-z' if rsync_opts[:compress]
         if rsync_opts[:verbose]
           rsync_opts[:quiet] = false
-          cmd << "-v"
+          cmd << '-v'
         end
-        if rsync_opts[:quiet]
-          cmd << "-q"
-        end
-        if rsync_opts[:progress]
-          cmd << "--progress"
-        end
-        if rsync_opts[:partial]
-          cmd << "--partial"
-        end
-        if rsync_opts[:append]
-          cmd << "--append"
-        end
-        if rsync_opts[:delete]
-          cmd << "--delete"
-        end
+        cmd << '-q' if rsync_opts[:quiet]
+        cmd << '--progress' if rsync_opts[:progress]
+        cmd << '--partial' if rsync_opts[:partial]
+        cmd << '--append' if rsync_opts[:append]
+        cmd << '--delete' if rsync_opts[:delete]
         if rsync_opts[:bwlimit]
           limit = @opts[:bwlimit].to_i
           cmd << "--bwlimit #{limit}"

@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
-require "knox_train"
-require "knox_train/cli"
+# frozen_string_literal: true
+
+require 'knox_train'
+require 'knox_train/cli'
 KnoxTrain::CLI.start(ARGV)

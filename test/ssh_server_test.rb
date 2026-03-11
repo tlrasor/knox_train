@@ -1,11 +1,13 @@
-require "test_helper"
-require "minitest/mock"
+# frozen_string_literal: true
+
+require 'test_helper'
+require 'minitest/mock'
 
 class SshServerTest < Minitest::Test
   def setup
     @server = KnoxTrain::SshServer.new(
-      host: "nas.local", user: "admin", mac: "00:11:22:33:44:55",
-      ip: "192.168.1.100", wake_timeout: 10, shutdown_timeout: 10
+      host: 'nas.local', user: 'admin', mac: '00:11:22:33:44:55',
+      ip: '192.168.1.100', wake_timeout: 10, shutdown_timeout: 10
     )
   end
 
@@ -20,7 +22,7 @@ class SshServerTest < Minitest::Test
 
   def test_wake_skips_wol_when_already_online
     @server.stub(:online?, true) do
-      @server.wake  # returns early — Commands never called
+      @server.wake # returns early — Commands never called
     end
     # @we_woke_it stays false — subsequent shutdown is a no-op
     exec_called = false
@@ -90,7 +92,7 @@ class SshServerTest < Minitest::Test
     fake_commands.define_singleton_method(:exec) { |cmd| executed = cmd }
 
     KnoxTrain::Commands.stub(:new, fake_commands) do
-      @server.exec("/sbin/poweroff")
+      @server.exec('/sbin/poweroff')
     end
     assert_match(/ssh/, executed)
     assert_match(/poweroff/, executed)

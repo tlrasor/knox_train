@@ -1,16 +1,18 @@
-require "erb"
-require "fileutils"
-require "tty-which"
+# frozen_string_literal: true
+
+require 'erb'
+require 'fileutils'
+require 'tty-which'
 
 module KnoxTrain
   module Scheduler
     class Launchd
-      LABEL  = "local.knox"
-      BINARY = TTY::Which.which("knox") || "/opt/homebrew/bin/knox"
+      LABEL  = 'local.knox'
+      BINARY = TTY::Which.which('knox') || '/opt/homebrew/bin/knox'
       private_constant :BINARY
 
-      PLIST_DIR = File.expand_path("~/Library/LaunchAgents")
-      LOG_DIR   = File.expand_path("~/Library/Logs/knox")
+      PLIST_DIR = File.expand_path('~/Library/LaunchAgents')
+      LOG_DIR   = File.expand_path('~/Library/Logs/knox')
       private_constant :PLIST_DIR, :LOG_DIR
 
       TEMPLATE = <<~XML
@@ -54,19 +56,20 @@ module KnoxTrain
         @config_path = config_path
         @hour        = hour
         @minute      = minute
-        @path        = ENV["PATH"] || "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+        @path        = ENV['PATH'] || '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin'
       end
 
       def install
         ensure_log_dir
-        launchctl("unload", plist_path) if File.exist?(plist_path)
-        File.write(plist_path, ERB.new(TEMPLATE, trim_mode: "-").result(binding))
-        launchctl("load", plist_path)
+        launchctl('unload', plist_path) if File.exist?(plist_path)
+        File.write(plist_path, ERB.new(TEMPLATE, trim_mode: '-').result(binding))
+        launchctl('load', plist_path)
       end
 
       def uninstall
         return unless File.exist?(plist_path)
-        launchctl("unload", plist_path)
+
+        launchctl('unload', plist_path)
         File.delete(plist_path)
       end
 
@@ -81,7 +84,7 @@ module KnoxTrain
       end
 
       def launchctl(subcommand, path)
-        system("launchctl", subcommand, path)
+        system('launchctl', subcommand, path)
       end
     end
   end

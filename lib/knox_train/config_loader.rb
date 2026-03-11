@@ -1,17 +1,19 @@
+# frozen_string_literal: true
+
 module KnoxTrain
   class ConfigLoader
     class Error < StandardError; end
 
-    CONFIG_ENV_KEY = "KNOX_CONFIG"
+    CONFIG_ENV_KEY = 'KNOX_CONFIG'
     DEFAULT_PATHS  = [
-      File.join(Dir.pwd, "knox_train.rb"),
-      File.expand_path("~/.config/knox_train/config.rb")
+      File.join(Dir.pwd, 'knox_train.rb'),
+      File.expand_path('~/.config/knox_train/config.rb')
     ].freeze
 
     # Returns the first path that exists, or nil.
     # Priority: explicit_path → KNOX_CONFIG env → ./knox_train.rb → ~/.config/knox_train/config.rb
     def self.find(explicit_path: nil)
-      [explicit_path, ENV[CONFIG_ENV_KEY], *DEFAULT_PATHS].compact.find { |p| File.exist?(p) }
+      [explicit_path, ENV.fetch(CONFIG_ENV_KEY, nil), *DEFAULT_PATHS].compact.find { |p| File.exist?(p) }
     end
 
     # Kernel.load (not require) so the file can be re-loaded between tests.

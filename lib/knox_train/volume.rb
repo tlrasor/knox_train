@@ -1,4 +1,7 @@
-require "tty-logger"
+# frozen_string_literal: true
+
+require 'English'
+require 'tty-logger'
 
 module KnoxTrain
   class Volume
@@ -54,13 +57,13 @@ module KnoxTrain
     # automatically — no mkdir or sudo needed. Keychain credentials are used silently
     # (same mechanism as Finder cmd+K). Works in a LaunchAgent (user session) context.
     def do_mount
-      unless system("osascript", "-e", %(mount volume "#{@smb}"))
-        raise "osascript mount volume failed (exit #{$?.exitstatus})"
-      end
+      return if system('osascript', '-e', %(mount volume "#{@smb}"))
+
+      raise "osascript mount volume failed (exit #{$CHILD_STATUS.exitstatus})"
     end
 
     def do_unmount
-      system("diskutil", "unmount", @path)
+      system('diskutil', 'unmount', @path)
     end
 
     def poll_until(desired_state, timeout)
@@ -68,6 +71,7 @@ module KnoxTrain
       loop do
         return if (mounted? ? :mounted : :unmounted) == desired_state
         raise "Timed out after #{timeout}s waiting for #{@path} to be #{desired_state}" if Time.now >= deadline
+
         sleep POLL_INTERVAL
       end
     end

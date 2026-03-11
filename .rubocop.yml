@@ -1,0 +1,51 @@
+AllCops:
+  TargetRubyVersion: 4.0
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - "tap/**/*"
+    - "*.gemspec"
+    - "Gemfile"
+    - "restic/**/*"
+
+# Metrics cops are too strict for a backup orchestration tool with
+# necessarily complex methods (command-building, DSL evaluation, etc.)
+Metrics/MethodLength:
+  Enabled: false
+Metrics/AbcSize:
+  Enabled: false
+Metrics/CyclomaticComplexity:
+  Enabled: false
+Metrics/BlockLength:
+  Enabled: false
+Metrics/ClassLength:
+  Enabled: false
+Metrics/PerceivedComplexity:
+  Enabled: false
+Metrics/ParameterLists:
+  Enabled: false
+
+# Module/class documentation not required for this project
+Style/Documentation:
+  Enabled: false
+
+# Empty blocks are used intentionally as no-op stubs in tests and DSL hooks
+Lint/EmptyBlock:
+  Enabled: false
+
+# Knox uses extend at top-level intentionally to allow script-mode usage
+Style/MixinUsage:
+  Enabled: false
+
+# Optional boolean params are used in internal DSL/driver methods — not a public API
+Style/OptionalBooleanParameter:
+  Enabled: false
+
+# Annotated format tokens are overly prescriptive for short format strings
+Style/FormatStringToken:
+  Enabled: false
+
+# docs/ files use kebab-case names intentionally
+Naming/FileName:
+  Exclude:
+    - "docs/**/*"

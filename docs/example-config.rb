@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # ═══════════════════════════════════════════════════════════════════════════
 # KnoxTrain Configuration Example
 # ═══════════════════════════════════════════════════════════════════════════
@@ -48,8 +50,8 @@ profile :documents do
   #   - Home expansion: "~/Documents"
   #   - Multiple sources: backup different dirs to same backends
   sources [
-    "~/Documents",
-    "~/Desktop",
+    '~/Documents',
+    '~/Desktop'
   ]
 
   # Optional: Exclude files matching patterns in these files
@@ -62,12 +64,12 @@ profile :documents do
   # Optional: Restic tags for organizational purposes
   # Tags are stored with snapshots and help organize backups
   # Multiple profiles can share tags (e.g., :documents)
-  tags [:documents, :personal]
+  tags %i[documents personal]
 
   # Optional: SSH host for Wake-on-LAN and automated shutdown
   # Used by run_before/run_after hooks to manage NAS devices
   # Example: "nas.local" or "192.168.1.100"
-  host "nas.local"
+  host 'nas.local'
 
   # ───────────────────────────────────────────────────────────────────────────
   # BACKEND: S3 (cloud storage)
@@ -79,14 +81,14 @@ profile :documents do
     # S3 repository URL
     # Format: s3:https://s3.example.com/bucket-name
     # or (Backblaze B2): s3:s3.us-east-005.backblazeb2.com/bucket-name
-    repo "s3:s3.us-east-005.backblazeb2.com/your-bucket/documents"
+    repo 's3:s3.us-east-005.backblazeb2.com/your-bucket/documents'
 
     # Repository encryption password
     # Stored as a Proc and executed at runtime (deferred execution)
     # Options:
     #   - keychain("service-name")      — fetch from macOS Keychain
     #   - env_secret("ENV_VAR_NAME")    — fallback for non-macOS systems
-    password { keychain("restic-documents") }
+    password { keychain('restic-documents') }
 
     # Optional: Retention policy (pruning rules)
     # Keeps N snapshots per time period:
@@ -120,10 +122,10 @@ profile :documents do
   backend :sftp do
     # SFTP repository URL
     # Format: sftp://user@host/path or sftp://host/path
-    repo "sftp://nas.local/backups/documents"
+    repo 'sftp://nas.local/backups/documents'
 
     # Password for SFTP authentication
-    password { keychain("restic-sftp") }
+    password { keychain('restic-sftp') }
 
     # Retention policy for SFTP backend
     retention daily: 30, weekly: 52, monthly: 24, yearly: 5
@@ -134,14 +136,14 @@ profile :documents do
     #   - online?()  — check if host is reachable
     #   - shutdown() — gracefully power down via SSH
     run_before do
-      server = SshServer.new("nas.local", mac: "00:11:22:33:44:55")
+      server = SshServer.new('nas.local', mac: '00:11:22:33:44:55')
       server.wake unless server.online?
     end
 
     # Hook: Shutdown NAS after backup
     # Always runs (even on error) to ensure device powers down
     run_after do
-      server = SshServer.new("nas.local", mac: "00:11:22:33:44:55")
+      server = SshServer.new('nas.local', mac: '00:11:22:33:44:55')
       server.shutdown if server.online?
     end
   end
@@ -155,8 +157,8 @@ end
 profile :repos do
   # Multiple sources can be backed up to same backends
   sources [
-    "~/Repos",        # Main project directory
-    "~/code",         # Alternative path
+    '~/Repos', # Main project directory
+    '~/code' # Alternative path
   ]
 
   # Exclude common build artifacts and dependencies
@@ -164,14 +166,14 @@ profile :repos do
     "#{File.expand_path('~')}/.config/restic/excludes-projects.txt"
   ]
 
-  tags [:repos, :work]
+  tags %i[repos work]
 
   # ───────────────────────────────────────────────────────────────────────────
   # BACKEND: S3 (cloud storage)
   # ───────────────────────────────────────────────────────────────────────────
   backend :s3 do
-    repo "s3:s3.us-east-005.backblazeb2.com/your-bucket/repos"
-    password { keychain("restic-repos") }
+    repo 's3:s3.us-east-005.backblazeb2.com/your-bucket/repos'
+    password { keychain('restic-repos') }
     retention daily: 30, weekly: 52, monthly: 24, yearly: 5
   end
 
@@ -179,17 +181,17 @@ profile :repos do
   # BACKEND: SFTP (NAS storage)
   # ───────────────────────────────────────────────────────────────────────────
   backend :sftp do
-    repo "sftp://nas.local/backups/repos"
-    password { keychain("restic-sftp-repos") }
+    repo 'sftp://nas.local/backups/repos'
+    password { keychain('restic-sftp-repos') }
     retention daily: 30, weekly: 52, monthly: 24, yearly: 5
 
     run_before do
-      server = SshServer.new("nas.local", mac: "00:11:22:33:44:55")
+      server = SshServer.new('nas.local', mac: '00:11:22:33:44:55')
       server.wake unless server.online?
     end
 
     run_after do
-      server = SshServer.new("nas.local", mac: "00:11:22:33:44:55")
+      server = SshServer.new('nas.local', mac: '00:11:22:33:44:55')
       server.shutdown if server.online?
     end
   end
@@ -206,36 +208,34 @@ profile :photos do
   # Use skip! to skip this profile if a required path doesn't exist
   sources [
     proc do
-      path = "/Volumes/alpha/photos"
-      unless File.directory?(path)
-        skip! "External photo drive not mounted"
-      end
+      path = '/Volumes/alpha/photos'
+      skip! 'External photo drive not mounted' unless File.directory?(path)
       path
     end
   ]
 
-  tags [:photos, :media]
+  tags %i[photos media]
 
   backend :s3 do
-    repo "s3:s3.us-east-005.backblazeb2.com/your-bucket/photos"
-    password { keychain("restic-photos") }
+    repo 's3:s3.us-east-005.backblazeb2.com/your-bucket/photos'
+    password { keychain('restic-photos') }
 
     # Longer retention for photos (longer history)
     retention daily: 30, weekly: 52, monthly: 36, yearly: 10
   end
 
   backend :sftp do
-    repo "sftp://nas.local/backups/photos"
-    password { keychain("restic-sftp-photos") }
+    repo 'sftp://nas.local/backups/photos'
+    password { keychain('restic-sftp-photos') }
     retention daily: 30, weekly: 52, monthly: 36, yearly: 10
 
     run_before do
-      server = SshServer.new("nas.local", mac: "00:11:22:33:44:55")
+      server = SshServer.new('nas.local', mac: '00:11:22:33:44:55')
       server.wake unless server.online?
     end
 
     run_after do
-      server = SshServer.new("nas.local", mac: "00:11:22:33:44:55")
+      server = SshServer.new('nas.local', mac: '00:11:22:33:44:55')
       server.shutdown if server.online?
     end
   end

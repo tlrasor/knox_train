@@ -1,8 +1,9 @@
-require "test_helper"
-require "minitest/mock"
+# frozen_string_literal: true
+
+require 'test_helper'
+require 'minitest/mock'
 
 class DslTest < Minitest::Test
-
   # ── ConfigContext ──────────────────────────────────────────────────────────
 
   def make_ctx(&block)
@@ -14,51 +15,68 @@ class DslTest < Minitest::Test
   def test_profile_declaration
     ctx = make_ctx do
       profile :documents do
-        source "~/Documents"
+        source '~/Documents'
         backend :b2 do
-          repo "b2:bucket:docs"
-          password { "secret" }
+          repo 'b2:bucket:docs'
+          password { 'secret' }
         end
       end
     end
     assert_includes ctx.profiles.keys, :documents
     p = ctx.profiles[:documents]
     assert_equal :documents, p.name
-    assert_equal ["~/Documents"], p.sources
+    assert_equal ['~/Documents'], p.sources
   end
 
   def test_duplicate_profile_raises
     assert_raises(KnoxTrain::DSL::UnknownKeyError) do
       make_ctx do
-        profile(:dup) { source "/tmp"; backend(:b2) { repo "b2:x:y"; password { "" } } }
-        profile(:dup) { source "/tmp"; backend(:b2) { repo "b2:x:y"; password { "" } } }
+        profile(:dup) do
+          source '/tmp'
+          backend(:b2) do
+            repo 'b2:x:y'
+            password { '' }
+          end
+        end
+        profile(:dup) do
+          source '/tmp'
+          backend(:b2) do
+            repo 'b2:x:y'
+            password { '' }
+          end
+        end
       end
     end
   end
 
   def test_group_declaration
     ctx = make_ctx do
-      group :all, [:documents, :photos]
+      group :all, %i[documents photos]
     end
     assert_equal %i[documents photos], ctx.groups[:all]
   end
 
   def test_global_declaration
-    ctx = make_ctx { global { priority :low; notifications false } }
+    ctx = make_ctx do
+      global do
+        priority :low
+        notifications false
+      end
+    end
     assert_equal :low, ctx.global.priority
     assert_equal false, ctx.global.notifications
   end
 
   def test_ssh_server_returns_instance
     ctx = make_ctx {}
-    server = ctx.ssh_server(host: "nas.local", user: "admin", mac: "00:00:00:00:00:00")
+    server = ctx.ssh_server(host: 'nas.local', user: 'admin', mac: '00:00:00:00:00:00')
     assert_instance_of KnoxTrain::SshServer, server
-    assert_equal "nas.local", server.host
+    assert_equal 'nas.local', server.host
   end
 
   def test_unknown_top_level_key_raises
     assert_raises(KnoxTrain::DSL::UnknownKeyError) do
-      make_ctx { typo_keyword "value" }
+      make_ctx { typo_keyword 'value' }
     end
   end
 
@@ -66,14 +84,26 @@ class DslTest < Minitest::Test
 
   def test_profile_source_string
     ctx = make_ctx do
-      profile(:p) { source "~/Documents"; backend(:b2) { repo "b2:x:y"; password { "" } } }
+      profile(:p) do
+        source '~/Documents'
+        backend(:b2) do
+          repo 'b2:x:y'
+          password { '' }
+        end
+      end
     end
-    assert_equal ["~/Documents"], ctx.profiles[:p].sources
+    assert_equal ['~/Documents'], ctx.profiles[:p].sources
   end
 
   def test_profile_source_block
     ctx = make_ctx do
-      profile(:p) { source { "/tmp/photos" }; backend(:b2) { repo "b2:x:y"; password { "" } } }
+      profile(:p) do
+        source { '/tmp/photos' }
+        backend(:b2) do
+          repo 'b2:x:y'
+          password { '' }
+        end
+      end
     end
     assert_kind_of Proc, ctx.profiles[:p].sources.first
   end
@@ -81,9 +111,15 @@ class DslTest < Minitest::Test
   def test_profile_multiple_backends
     ctx = make_ctx do
       profile(:p) do
-        source "/tmp"
-        backend(:sftp) { repo "sftp:host:/path"; password { "" } }
-        backend(:b2)   { repo "b2:bucket:p";     password { "" } }
+        source '/tmp'
+        backend(:sftp) do
+          repo 'sftp:host:/path'
+          password { '' }
+        end
+        backend(:b2) do
+          repo 'b2:bucket:p'
+          password { '' }
+        end
       end
     end
     assert_equal 2, ctx.profiles[:p].backends.length
@@ -92,7 +128,7 @@ class DslTest < Minitest::Test
 
   def test_unknown_profile_key_raises
     assert_raises(KnoxTrain::DSL::UnknownKeyError) do
-      make_ctx { profile(:p) { soruce "~/Documents" } }
+      make_ctx { profile(:p) { soruce '~/Documents' } }
     end
   end
 
@@ -101,8 +137,12 @@ class DslTest < Minitest::Test
   def test_backend_retention_stored
     ctx = make_ctx do
       profile(:p) do
-        source "/tmp"
-        backend(:b2) { repo "b2:x:y"; password { "" }; retention daily: 7, weekly: 8 }
+        source '/tmp'
+        backend(:b2) do
+          repo 'b2:x:y'
+          password { '' }
+          retention daily: 7, weekly: 8
+        end
       end
     end
     ret = ctx.profiles[:p].backends.first.retention
@@ -114,8 +154,12 @@ class DslTest < Minitest::Test
     assert_raises(KnoxTrain::DSL::UnknownKeyError) do
       make_ctx do
         profile(:p) do
-          source "/tmp"
-          backend(:b2) { repo "b2:x:y"; password { "" }; retention typo: 7 }
+          source '/tmp'
+          backend(:b2) do
+            repo 'b2:x:y'
+            password { '' }
+            retention typo: 7
+          end
         end
       end
     end
@@ -125,12 +169,12 @@ class DslTest < Minitest::Test
     run_before_called = false
     ctx = make_ctx do
       profile(:p) do
-        source "/tmp"
+        source '/tmp'
         backend(:sftp) do
-          repo "sftp:host:/path"
-          password { "" }
+          repo 'sftp:host:/path'
+          password { '' }
           run_before { run_before_called = true }
-          run_after  { }
+          run_after  {}
         end
       end
     end
@@ -143,29 +187,35 @@ class DslTest < Minitest::Test
   def test_unknown_backend_key_raises
     assert_raises(KnoxTrain::DSL::UnknownKeyError) do
       make_ctx do
-        profile(:p) { source "/tmp"; backend(:b2) { repo "b2:x:y"; typo_key "val" } }
+        profile(:p) do
+          source '/tmp'
+          backend(:b2) do
+            repo 'b2:x:y'
+            typo_key 'val'
+          end
+        end
       end
     end
   end
 
   def test_backend_keychain_method_calls_secrets_keychain_fetch
     fake_status = Struct.new(:success?).new(true)
-    fake_result = ["mypassword\n", "", fake_status]
+    fake_result = ["mypassword\n", '', fake_status]
 
     KnoxTrain::Secrets::Keychain.stub(:available?, true) do
       Open3.stub(:capture3, fake_result) do
         ctx = make_ctx do
           profile(:p) do
-            source "/tmp"
+            source '/tmp'
             backend(:b2) do
-              repo "b2:x:y"
-              password { keychain("restic-docs") }
+              repo 'b2:x:y'
+              password { keychain('restic-docs') }
             end
           end
         end
         b = ctx.profiles[:p].backends.first
         assert_kind_of Proc, b.password
-        assert_equal "mypassword", b.password.call
+        assert_equal 'mypassword', b.password.call
       end
     end
   end
@@ -173,20 +223,20 @@ class DslTest < Minitest::Test
   def test_backend_env_credential_stores_named_procs
     ctx = make_ctx do
       profile(:p) do
-        source "/tmp"
+        source '/tmp'
         backend(:b2) do
-          repo "b2:x:y"
-          password { "" }
-          env_credential("AWS_ACCESS_KEY_ID")     { "key-id" }
-          env_credential("AWS_SECRET_ACCESS_KEY") { "secret" }
+          repo 'b2:x:y'
+          password { '' }
+          env_credential('AWS_ACCESS_KEY_ID')     { 'key-id' }
+          env_credential('AWS_SECRET_ACCESS_KEY') { 'secret' }
         end
       end
     end
     creds = ctx.profiles[:p].backends.first.env_credentials
     assert_equal 2, creds.length
-    assert_kind_of Proc, creds["AWS_ACCESS_KEY_ID"]
-    assert_equal "key-id", creds["AWS_ACCESS_KEY_ID"].call
-    assert_equal "secret", creds["AWS_SECRET_ACCESS_KEY"].call
+    assert_kind_of Proc, creds['AWS_ACCESS_KEY_ID']
+    assert_equal 'key-id', creds['AWS_ACCESS_KEY_ID'].call
+    assert_equal 'secret', creds['AWS_SECRET_ACCESS_KEY'].call
   end
 
   # ── GlobalDSL ─────────────────────────────────────────────────────────────

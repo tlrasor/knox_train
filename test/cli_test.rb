@@ -1,5 +1,7 @@
-require "test_helper"
-require "knox_train/cli"
+# frozen_string_literal: true
+
+require 'test_helper'
+require 'knox_train/cli'
 
 class CLITest < Minitest::Test
   def test_notify_if_enabled_with_nil_registry
@@ -15,11 +17,11 @@ class CLITest < Minitest::Test
     registry.expect(:global, nil)
 
     KnoxTrain.stub(:registry, registry) do
-      cli.send(:notify_if_enabled, "test message")
+      cli.send(:notify_if_enabled, 'test message')
     end
 
     assert_equal 1, notifications_sent.length
-    assert_equal "test message", notifications_sent[0][:message]
+    assert_equal 'test message', notifications_sent[0][:message]
   end
 
   def test_notify_if_enabled_with_notifications_true
@@ -39,11 +41,11 @@ class CLITest < Minitest::Test
     registry.expect(:global, global_cfg)
 
     KnoxTrain.stub(:registry, registry) do
-      cli.send(:notify_if_enabled, "test message")
+      cli.send(:notify_if_enabled, 'test message')
     end
 
     assert_equal 1, notifications_sent.length
-    assert_equal "test message", notifications_sent[0][:message]
+    assert_equal 'test message', notifications_sent[0][:message]
   end
 
   def test_notify_if_enabled_with_notifications_false
@@ -63,7 +65,7 @@ class CLITest < Minitest::Test
     registry.expect(:global, global_cfg)
 
     KnoxTrain.stub(:registry, registry) do
-      cli.send(:notify_if_enabled, "test message")
+      cli.send(:notify_if_enabled, 'test message')
     end
 
     assert_equal 0, notifications_sent.length
@@ -86,11 +88,11 @@ class CLITest < Minitest::Test
     registry.expect(:global, global_cfg)
 
     KnoxTrain.stub(:registry, registry) do
-      cli.send(:notify_if_enabled, "test message", { activate: true })
+      cli.send(:notify_if_enabled, 'test message', { activate: true })
     end
 
     assert_equal 1, notifications_sent.length
-    assert_equal "test message", notifications_sent[0][:message]
+    assert_equal 'test message', notifications_sent[0][:message]
     assert_equal({ activate: true }, notifications_sent[0][:opts])
   end
 end

@@ -1,10 +1,12 @@
-require "test_helper"
+# frozen_string_literal: true
+
+require 'test_helper'
 
 class VolumeTest < Minitest::Test
   def setup
     @vol = KnoxTrain::Volume.new(
-      path:          "/Volumes/alpha",
-      smb:           "smb://user@192.168.1.100/share",
+      path: '/Volumes/alpha',
+      smb: 'smb://user@192.168.1.100/share',
       mount_timeout: 10
     )
   end
@@ -36,7 +38,7 @@ class VolumeTest < Minitest::Test
   end
 
   def test_mount_calls_do_mount_and_sets_we_mounted_it
-    @vol.define_singleton_method(:do_mount)   { }
+    @vol.define_singleton_method(:do_mount)   {}
     @vol.define_singleton_method(:poll_until) { |_state, _timeout| }
 
     @vol.stub(:mounted?, false) { @vol.mount! }
@@ -45,7 +47,7 @@ class VolumeTest < Minitest::Test
   end
 
   def test_mount_raises_skip_profile_on_timeout
-    @vol.define_singleton_method(:do_mount) { }
+    @vol.define_singleton_method(:do_mount) {}
     @vol.define_singleton_method(:poll_until) do |_state, timeout|
       raise "Timed out after #{timeout}s waiting for /Volumes/alpha to be mounted"
     end
@@ -61,13 +63,13 @@ class VolumeTest < Minitest::Test
     do_unmount_called = false
     @vol.define_singleton_method(:do_unmount) { do_unmount_called = true }
 
-    @vol.unmount  # @we_mounted_it starts false
+    @vol.unmount # @we_mounted_it starts false
     refute do_unmount_called
   end
 
   def test_unmount_calls_do_unmount_and_clears_we_mounted_it
     # Prime @we_mounted_it = true via a successful mount! cycle.
-    @vol.define_singleton_method(:do_mount)   { }
+    @vol.define_singleton_method(:do_mount)   {}
     @vol.define_singleton_method(:poll_until) { |_state, _timeout| }
     @vol.stub(:mounted?, false) { @vol.mount! }
     assert @vol.instance_variable_get(:@we_mounted_it)

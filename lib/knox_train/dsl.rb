@@ -1,19 +1,20 @@
-require "knox_train/connection_test"
-require "knox_train/profile"
-require "knox_train/ssh_server"
-require "knox_train/secrets/keychain"
-require "knox_train/secrets/env"
+# frozen_string_literal: true
+
+require 'knox_train/connection_test'
+require 'knox_train/profile'
+require 'knox_train/ssh_server'
+require 'knox_train/secrets/keychain'
+require 'knox_train/secrets/env'
 
 module KnoxTrain
   module DSL
-
     # ── Exceptions ─────────────────────────────────────────────────────────
     class UnknownKeyError < StandardError; end
     class ValidationError < StandardError; end
     class SkipProfile < StandardError; end
 
     # ── GlobalConfig ────────────────────────────────────────────────────────
-    GlobalConfig = Struct.new(:priority, :notifications, keyword_init: true)
+    GlobalConfig = Struct.new(:priority, :notifications)
 
     # ── GlobalDSL ──────────────────────────────────────────────────────────
     # Evaluated inside `global do ... end` blocks.
@@ -23,10 +24,10 @@ module KnoxTrain
         @notifications = true
       end
 
-      def priority(val)      = @priority      = val
+      def priority(val)      = @priority = val
       def notifications(val) = @notifications = val
 
-      def method_missing(name, *_args, &_block)
+      def method_missing(name, *_args, &)
         loc = caller_locations(1, 1).first
         raise UnknownKeyError,
               "Unknown global key '#{name}' at #{loc.absolute_path}:#{loc.lineno}"
@@ -54,7 +55,7 @@ module KnoxTrain
         @env_credentials = {}
       end
 
-      def repo(string)     = @repo     = string
+      def repo(string)     = @repo = string
       def password(&block) = @password = block
 
       # Accepts a hash: retention daily: 30, weekly: 52
@@ -94,7 +95,7 @@ module KnoxTrain
         @env_credentials[var_name] = block
       end
 
-      def method_missing(name, *_args, &_block)
+      def method_missing(name, *_args, &)
         loc = caller_locations(1, 1).first
         raise UnknownKeyError,
               "Unknown backend key '#{name}' at #{loc.absolute_path}:#{loc.lineno}"
@@ -104,12 +105,12 @@ module KnoxTrain
 
       def build
         Backend.new(
-          type:            @type,
-          repo:            @repo,
-          password:        @password,
-          retention:       @retention,
-          run_befores:     @run_befores,
-          run_afters:      @run_afters,
+          type: @type,
+          repo: @repo,
+          password: @password,
+          retention: @retention,
+          run_befores: @run_befores,
+          run_afters: @run_afters,
           env_credentials: @env_credentials
         )
       end
@@ -139,9 +140,9 @@ module KnoxTrain
       def tags(arr)          = @tags = arr
       def host(val = true)   = @host = val
 
-      def backend(type, &block)
+      def backend(type, &)
         dsl = BackendDSL.new(type)
-        dsl.instance_eval(&block)
+        dsl.instance_eval(&)
         @backends << dsl.build
       end
 
@@ -149,11 +150,11 @@ module KnoxTrain
       #   source { skip! "Photos volume not mounted" unless File.directory?(path); path }
       # Works because source blocks are created inside `profile do...end` which is
       # instance_eval'd on ProfileDSL, so `self` inside the block is the ProfileDSL instance.
-      def skip!(reason = "")
+      def skip!(reason = '')
         raise SkipProfile, reason
       end
 
-      def method_missing(name, *_args, &_block)
+      def method_missing(name, *_args, &)
         loc = caller_locations(1, 1).first
         raise UnknownKeyError,
               "Unknown profile key '#{name}' at #{loc.absolute_path}:#{loc.lineno}"
@@ -163,12 +164,12 @@ module KnoxTrain
 
       def build
         Profile.new(
-          name:          @name,
-          sources:       @sources,
+          name: @name,
+          sources: @sources,
           exclude_files: @exclude_files,
-          tags:          @tags,
-          host:          @host,
-          backends:      @backends
+          tags: @tags,
+          host: @host,
+          backends: @backends
         )
       end
     end
@@ -184,13 +185,12 @@ module KnoxTrain
         @global   = nil
       end
 
-      def profile(name, &block)
+      def profile(name, &)
         key = name.to_sym
-        if @profiles.key?(key)
-          raise UnknownKeyError, "Profile '#{key}' declared more than once"
-        end
+        raise UnknownKeyError, "Profile '#{key}' declared more than once" if @profiles.key?(key)
+
         dsl = ProfileDSL.new(key)
-        dsl.instance_eval(&block)
+        dsl.instance_eval(&)
         @profiles[key] = dsl.build
       end
 
@@ -208,12 +208,12 @@ module KnoxTrain
       # Creates a data-only SshServer object. Operational methods (wake/shutdown)
       # are added in Phase 4. The returned object is typically assigned to a local
       # variable in the configure block and closed over by run_before/run_after blocks.
-      def ssh_server(**opts)
-        KnoxTrain::SshServer.new(**opts)
+      def ssh_server(**)
+        KnoxTrain::SshServer.new(**)
       end
 
-      def volume(**opts)
-        KnoxTrain::Volume.new(**opts)
+      def volume(**)
+        KnoxTrain::Volume.new(**)
       end
 
       def group(name, profile_names)
@@ -223,18 +223,18 @@ module KnoxTrain
       # Runs after the configure block completes. Validates all profiles with
       # dry-schema. Raises ValidationError with all failure messages if any fail.
       def validate!
-        require "knox_train/schema"
+        require 'knox_train/schema'
         errors = []
 
         @profiles.each do |name, profile|
           # Profile-level: sources and backends just need to be non-empty arrays
           profile_result = KnoxTrain::Schema::ProfileSchema.call(
-            name:          profile.name,
-            sources:       profile.sources,
+            name: profile.name,
+            sources: profile.sources,
             exclude_files: profile.exclude_files || [],
-            tags:          profile.tags || [],
-            host:          profile.host,
-            backends:      profile.backends
+            tags: profile.tags || [],
+            host: profile.host,
+            backends: profile.backends
           )
           errors << "Profile '#{name}': #{profile_result.errors.to_h}" unless profile_result.success?
 
@@ -252,7 +252,7 @@ module KnoxTrain
         raise ValidationError, errors.join("\n") unless errors.empty?
       end
 
-      def method_missing(name, *_args, &_block)
+      def method_missing(name, *_args, &)
         loc = caller_locations(1, 1).first
         raise UnknownKeyError,
               "Unknown DSL keyword '#{name}' at #{loc.absolute_path}:#{loc.lineno}"
@@ -260,6 +260,5 @@ module KnoxTrain
 
       def respond_to_missing?(_name, _include_private = false) = false
     end
-
   end
 end

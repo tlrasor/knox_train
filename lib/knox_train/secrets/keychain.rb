@@ -1,11 +1,13 @@
-require "open3"
+# frozen_string_literal: true
+
+require 'open3'
 
 module KnoxTrain
   module Secrets
     class Error < StandardError; end
 
     module Keychain
-      SECURITY_BIN = "/usr/bin/security"
+      SECURITY_BIN = '/usr/bin/security'
       private_constant :SECURITY_BIN
 
       # Returns true if the macOS security binary is present and executable.
@@ -25,17 +27,15 @@ module KnoxTrain
       def self.fetch(service)
         unless available?
           raise Error, "macOS Keychain not available (#{SECURITY_BIN} not found). " \
-                       "Use env_secret() as a non-macOS fallback."
+                       'Use env_secret() as a non-macOS fallback.'
         end
 
-        account = ENV.fetch("USER", ENV.fetch("LOGNAME", nil))
+        account = ENV.fetch('USER', ENV.fetch('LOGNAME', nil))
         stdout, stderr, status = Open3.capture3(
-          SECURITY_BIN, "find-generic-password", "-s", service.to_s, "-a", account.to_s, "-w"
+          SECURITY_BIN, 'find-generic-password', '-s', service.to_s, '-a', account.to_s, '-w'
         )
 
-        unless status.success?
-          raise Error, "Keychain lookup failed for service '#{service}': #{stderr.strip}"
-        end
+        raise Error, "Keychain lookup failed for service '#{service}': #{stderr.strip}" unless status.success?
 
         stdout.chomp
       end

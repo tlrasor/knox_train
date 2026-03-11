@@ -1,10 +1,12 @@
-require "tty-logger"
+# frozen_string_literal: true
+
+require 'tty-logger'
 
 module KnoxTrain
   class SshServer
     include KnoxTrain::ConnectionTest
 
-    POLL_INTERVAL = 5   # seconds between reachability checks
+    POLL_INTERVAL = 5 # seconds between reachability checks
     private_constant :POLL_INTERVAL
 
     attr_reader :host, :user, :mac, :ip, :wake_timeout, :shutdown_timeout
@@ -42,7 +44,7 @@ module KnoxTrain
         return
       end
       log.info "Shutting down #{@host}"
-      exec("/sbin/poweroff")
+      exec('/sbin/poweroff')
       poll_until(:offline, @shutdown_timeout)
       @we_woke_it = false
       log.success "#{@host} is offline"
@@ -64,9 +66,8 @@ module KnoxTrain
       deadline = Time.now + timeout
       loop do
         return if (online? ? :online : :offline) == desired_state
-        if Time.now >= deadline
-          raise "Timed out after #{timeout}s waiting for #{@host} to be #{desired_state}"
-        end
+        raise "Timed out after #{timeout}s waiting for #{@host} to be #{desired_state}" if Time.now >= deadline
+
         sleep POLL_INTERVAL
       end
     end

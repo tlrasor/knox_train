@@ -1,4 +1,6 @@
-require "knox_train/secrets/keychain"   # ensures Secrets::Error is defined
+# frozen_string_literal: true
+
+require 'knox_train/secrets/keychain' # ensures Secrets::Error is defined
 
 module KnoxTrain
   module Secrets
@@ -9,10 +11,9 @@ module KnoxTrain
       #   password { env_secret("RESTIC_PASSWORD") }  # non-macOS fallback
       #
       def self.fetch(var_name)
-        value = ENV[var_name]
-        if value.nil? || value.empty?
-          raise Error, "Environment variable '#{var_name}' is not set or empty"
-        end
+        value = ENV.fetch(var_name, nil)
+        raise Error, "Environment variable '#{var_name}' is not set or empty" if value.nil? || value.empty?
+
         value
       end
     end

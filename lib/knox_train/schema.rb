@@ -1,4 +1,6 @@
-require "dry-schema"
+# frozen_string_literal: true
+
+require 'dry-schema'
 
 module KnoxTrain
   module Schema
