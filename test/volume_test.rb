@@ -4,7 +4,7 @@ class VolumeTest < Minitest::Test
   def setup
     @vol = KnoxTrain::Volume.new(
       path:          "/Volumes/alpha",
-      smb:           "smb://travis@192.168.1.100/alpha",
+      smb:           "smb://user@192.168.1.100/share",
       mount_timeout: 10
     )
   end

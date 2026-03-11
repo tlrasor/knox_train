@@ -1,6 +1,6 @@
 # The noble train of data, also known as KnoxTrain
 
-![Henry Knox](https://en.wikipedia.org/wiki/Noble_train_of_artillery#/media/File:HenryKnox.jpg)
+![Henry Knox entering camp with artillery](Henry_Knox_entering_camp_with_artillery_cph.3g09060.jpg)
 
 Learn more about [Henry Knox](https://en.wikipedia.org/wiki/Henry_Knox), leader of [the noble train](https://en.wikipedia.org/wiki/Noble_train_of_artillery).
 
@@ -22,8 +22,9 @@ KnoxTrain is a Ruby CLI tool for managing backups across multiple restic backend
 ### System-wide (Homebrew)
 
 ```bash
-brew tap truevillain/knox file:///Users/travis/Projects/Personal/knox_train2/tap
-brew install truevillain/knox/knox_train
+git clone https://github.com/tlrasor/knox_train
+cd knox_train
+rake brew:install
 ```
 
 ### Updating

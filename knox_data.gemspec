@@ -10,6 +10,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "The noble train of data — restic backup orchestration"
   spec.license       = "MIT"
+  spec.homepage      = "https://github.com/tlrasor/knox_train"
 
   spec.required_ruby_version = ">= 4.0"
 

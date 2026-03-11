@@ -44,7 +44,7 @@ end
 profile :documents do
   # List of directories to backup
   # Can use:
-  #   - Absolute paths: "/Users/travis/Documents"
+  #   - Absolute paths: "/Users/yourname/Documents"
   #   - Home expansion: "~/Documents"
   #   - Multiple sources: backup different dirs to same backends
   sources [

@@ -1,5 +1,5 @@
 TAP_PATH = "file:///Users/travis/Projects/Personal/knox_train2/tap"
-TAP_NAME = "truevillain/knox"
+TAP_NAME = "tlrasor/knox"
 
 namespace :brew do
   desc "Install knox via Homebrew tap (first time setup)"

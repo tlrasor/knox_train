@@ -94,6 +94,6 @@ class SshServerTest < Minitest::Test
     end
     assert_match(/ssh/, executed)
     assert_match(/poweroff/, executed)
-    assert_match(/admin@192\.168\.1\.31/, executed)
+    assert_match(/admin@192\.168\.1\.100/, executed)
   end
 end
