@@ -36,9 +36,7 @@ module KnoxTrain
       # Prevent idle sleep for the duration of the backup. caffeinate watches
       # this process and exits automatically when knox does, so the background
       # item shown in macOS is "knox", not "caffeinate".
-      if RUBY_PLATFORM.include?('darwin')
-        Process.detach(Process.spawn('caffeinate', '-i', '-w', Process.pid.to_s))
-      end
+      Process.detach(Process.spawn('caffeinate', '-i', '-w', Process.pid.to_s)) if RUBY_PLATFORM.include?('darwin')
 
       path = options[:config] || KnoxTrain::ConfigLoader.find
       unless path
