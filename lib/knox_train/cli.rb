@@ -33,6 +33,12 @@ module KnoxTrain
     option :all,                    type: :boolean, desc: 'Run all profiles'
     option :prune,                  type: :boolean, desc: 'Apply retention policy after backup'
     def backup
+      # Prevent idle sleep for the duration of the backup. caffeinate watches
+      # this process and exits automatically when knox does, so the background
+      # item shown in macOS is "knox", not "caffeinate".
+      caffeinate_pid = Process.spawn('caffeinate', '-i', '-w', Process.pid.to_s)
+      Process.detach(caffeinate_pid)
+
       path = options[:config] || KnoxTrain::ConfigLoader.find
       unless path
         say 'No config file found. Use -c PATH to specify.', :red
