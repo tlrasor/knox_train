@@ -5,7 +5,7 @@ FORMULA_FILE = 'tap/Formula/knox_train.rb'
 
 # Always reads from disk so it's accurate after write_version runs
 def current_version
-  File.read(VERSION_FILE).match(/VERSION = "(.*?)"/)[1]
+  File.read(VERSION_FILE).match(/VERSION = ['"]([^'"]+)['"]/)[1]
 end
 
 def bump(part)
@@ -83,8 +83,9 @@ namespace :release do
   # Internal: commit version files + redeploy Homebrew
   task :deploy do
     v = current_version
-    sh "git add #{VERSION_FILE} #{FORMULA_FILE}"
+    sh "git add #{VERSION_FILE}"
     sh "git commit -m 'Release v#{v}'"
+    sh "git -C tap add Formula/knox_train.rb && git -C tap commit -m 'Release v#{v}'"
     Rake::Task['brew:reinstall'].invoke
   end
 end
