@@ -8,8 +8,9 @@ module KnoxTrain
   module Scheduler
     class Launchd
       LABEL  = 'local.knox'
-      BINARY = TTY::Which.which('knox') || '/opt/homebrew/bin/knox'
-      private_constant :BINARY
+      BINARY      = TTY::Which.which('knox')       || '/opt/homebrew/bin/knox'
+      CAFFEINATE  = TTY::Which.which('caffeinate') || '/usr/bin/caffeinate'
+      private_constant :BINARY, :CAFFEINATE
 
       PLIST_DIR = File.expand_path('~/Library/LaunchAgents')
       LOG_DIR   = File.expand_path('~/Library/Logs/knox')
@@ -25,6 +26,8 @@ module KnoxTrain
           <string><%= LABEL %></string>
           <key>ProgramArguments</key>
           <array>
+            <string><%= CAFFEINATE %></string>
+            <string>-i</string>
             <string><%= BINARY %></string>
             <string>backup</string>
             <string>--all</string>
