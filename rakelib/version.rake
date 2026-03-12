@@ -18,7 +18,7 @@ def bump(part)
 end
 
 def write_version(ver)
-  File.write(VERSION_FILE, "module KnoxTrain\n  VERSION = \"#{ver}\"\nend\n")
+  File.write(VERSION_FILE, "# frozen_string_literal: true\n\nmodule KnoxTrain\n  VERSION = '#{ver}'\nend\n")
   content = File.read(FORMULA_FILE)
   File.write(FORMULA_FILE, content.sub(/  version ".*"/, "  version \"#{ver}\""))
   puts "Version updated to #{ver}"
